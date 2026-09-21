@@ -1,0 +1,22 @@
+name: svga_next
+description: >-
+  High-performance SVGA player for Flutter. Background-isolate parsing,
+  streaming protobuf decode, GPU pre-decoding, audio, dynamic images, text
+  and custom drawers.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Only used for legacy SVGA 1.x (ZIP) files. SVGA 2.x uses dart:io's native zlib.
+  archive: ^3.6.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
