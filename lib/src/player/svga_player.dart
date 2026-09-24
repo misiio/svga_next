@@ -17,7 +17,8 @@ class SvgaPlayer extends StatefulWidget {
     this.controller,
     this.dynamicEntity,
     this.autoPlay = true,
-    this.loops = 0,
+    this.isLoop = false,
+    int? loops,
     this.fillMode = SvgaFillMode.forward,
     this.fit = BoxFit.contain,
     this.alignment = Alignment.center,
@@ -30,7 +31,7 @@ class SvgaPlayer extends StatefulWidget {
     this.onLoaded,
     this.onFinished,
     this.onLayerTap,
-  });
+  }) : loops = loops ?? (isLoop ? 0 : 1);
 
   /// If null, the player renders whatever [controller] already holds.
   final SvgaSource? source;
@@ -38,7 +39,10 @@ class SvgaPlayer extends StatefulWidget {
   final SvgaDynamicEntity? dynamicEntity;
   final bool autoPlay;
 
-  /// 0 = infinite.
+  /// Whether to repeat indefinitely when [loops] is omitted.
+  final bool isLoop;
+
+  /// Effective play count. 0 = infinite; an explicit value overrides [isLoop].
   final int loops;
   final SvgaFillMode fillMode;
   final BoxFit fit;
