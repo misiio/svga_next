@@ -1,0 +1,10 @@
+name: svga_next_example
+publish_to: none
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+dependencies:
+  flutter:
+    sdk: flutter
+  audioplayers: ^6.0.0
+  svga_next:
+    path: ../
