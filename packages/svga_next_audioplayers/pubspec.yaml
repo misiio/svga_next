@@ -1,0 +1,21 @@
+name: svga_next_audioplayers
+description: Audioplayers audio backend for svga_next.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  audioplayers: ^6.0.0
+  svga_next:
+    path: ../svga_next
+
+dev_dependencies:
+  audioplayers_platform_interface: ^7.1.1
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
