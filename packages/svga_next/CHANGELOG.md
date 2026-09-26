@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fix the example dependency conflict by resolving both svga_next and its audio backend from pub.dev.
+
 ## 0.1.0
 
 - Initial release of the Flutter SVGA player with SVGA 1.x and 2.x decoding.

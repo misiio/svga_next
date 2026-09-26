@@ -16,4 +16,7 @@ The demo downloads SVGA samples and a placeholder image, so it needs internet
 access. Run it on Android or iOS. Web is not supported.
 
 In the repository, `pubspec_overrides.yaml` selects the local packages. The
-published example resolves the audio backend from pub.dev.
+example resolves both packages from pub.dev when the overrides are absent.
+
+The example bundled with version 0.1.0 has a dependency source conflict.
+Run `flutter pub add svga_next:^0.1.0` in that example directory to fix it.

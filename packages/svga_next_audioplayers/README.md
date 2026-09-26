@@ -4,7 +4,7 @@ An optional `audioplayers` backend for `svga_next`.
 
 ## Requirements
 
-Flutter 3.19 and Dart 3.3 or later. Web is not supported.
+Flutter 3.44 and Dart 3.6 or later, matching the requirements of `audioplayers 6.8.1`. Web is not supported.
 
 ## Install
 
