@@ -4,7 +4,7 @@ description: >-
   streaming protobuf decode, GPU pre-decoding, audio, dynamic images, text
   and custom drawers.
 version: 0.1.0
-publish_to: none
+repository: https://github.com/misiio/svga_next
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

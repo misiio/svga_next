@@ -1,7 +1,7 @@
 name: svga_next_just_audio
-description: Just Audio backend for svga_next.
+description: Audio backend for the svga_next Flutter SVGA player using just_audio, with playback controls and automatic temporary file cleanup.
 version: 0.1.0
-publish_to: none
+repository: https://github.com/misiio/svga_next
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -11,8 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   just_audio: ^0.10.5
-  svga_next:
-    path: ../svga_next
+  svga_next: ^0.1.0
 
 dev_dependencies:
   just_audio_platform_interface: ^4.6.0

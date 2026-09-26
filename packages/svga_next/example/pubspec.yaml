@@ -1,14 +1,14 @@
 name: svga_next_example
 publish_to: none
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
 dependencies:
   flutter:
     sdk: flutter
   svga_next:
     path: ../
-  svga_next_audioplayers:
-    path: ../../svga_next_audioplayers
+  svga_next_audioplayers: ^0.1.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0

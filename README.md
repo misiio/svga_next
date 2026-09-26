@@ -11,3 +11,9 @@ This repository contains the Flutter SVGA player and optional audio backends.
 The [example app](packages/svga_next/example/) uses the `audioplayers` backend.
 Run `flutter pub get`, `flutter analyze`, and `flutter test` from each package
 directory. Run the example from its own directory.
+
+The checked-in `pubspec_overrides.yaml` files select local packages for
+development. Package archives exclude these files and use hosted dependencies.
+
+See [RELEASING.md](RELEASING.md) for validation and publication order.
+All three packages use the [MIT license](LICENSE).

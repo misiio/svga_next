@@ -12,12 +12,11 @@ SVGA parsing runs in a background isolate. The package decodes images before pla
 
 ## Install
 
-This package is not published to pub.dev yet. Add it as a path dependency in your app's `pubspec.yaml`, using the path to your local copy:
+Add the package to your app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  svga_next:
-    path: ../svga_next
+  svga_next: ^0.1.0
 ```
 
 Then run `flutter pub get`.
@@ -135,7 +134,7 @@ Dispose of the entity when its owner is removed. `setImage`, `setTextSpan`, `set
 
 ## Enable audio
 
-Audio playback requires a backend. Add either [`svga_next_audioplayers`](../svga_next_audioplayers/) or [`svga_next_just_audio`](../svga_next_just_audio/) to your app, then register it before loading animations. For example:
+Audio playback requires a backend. Add either [`svga_next_audioplayers`](https://pub.dev/packages/svga_next_audioplayers) or [`svga_next_just_audio`](https://pub.dev/packages/svga_next_just_audio) to your app, then register it before loading animations. For example:
 
 ```dart
 import 'package:flutter/widgets.dart';

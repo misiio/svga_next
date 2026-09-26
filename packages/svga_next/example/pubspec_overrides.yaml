@@ -1,0 +1,5 @@
+dependency_overrides:
+  svga_next:
+    path: ../
+  svga_next_audioplayers:
+    path: ../../svga_next_audioplayers

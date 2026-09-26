@@ -1,0 +1,3 @@
+dependency_overrides:
+  svga_next:
+    path: ../svga_next

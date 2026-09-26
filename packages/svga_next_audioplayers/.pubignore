@@ -1,0 +1,14 @@
+**/.dart_tool/
+**/build/
+**/coverage/
+**/.flutter-plugins*
+**/pubspec_overrides.yaml
+**/local.properties
+**/.DS_Store
+**/Pods/
+**/.symlinks/
+**/ephemeral/
+**/Flutter/Generated.xcconfig
+**/Flutter/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+/pubspec.lock
