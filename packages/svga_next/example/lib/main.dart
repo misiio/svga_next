@@ -1,46 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:svga_next/svga_next.dart';
-
-/// Audio adapter (lives in the app, so svga_next itself has no audio dependency).
-/// Uses a temp file rather than BytesSource for consistent iOS/Android support.
-class AudioplayersBackend implements SvgaAudioBackend {
-  @override
-  Future<SvgaAudioTrack> createTrack(String key, Uint8List bytes) async {
-    final file = File(
-        '${Directory.systemTemp.path}/svga_${key.hashCode}_${bytes.length}.mp3');
-    if (!await file.exists()) await file.writeAsBytes(bytes, flush: true);
-    final player = AudioPlayer()..setReleaseMode(ReleaseMode.stop);
-    return _Track(player, file.path);
-  }
-}
-
-class _Track implements SvgaAudioTrack {
-  _Track(this._player, this._path);
-  final AudioPlayer _player;
-  final String _path;
-
-  @override
-  Future<void> play(Duration position) =>
-      _player.play(DeviceFileSource(_path), position: position);
-  @override
-  Future<void> pause() => _player.pause();
-  @override
-  Future<void> resume() => _player.resume();
-  @override
-  Future<void> stop() => _player.stop();
-  @override
-  Future<void> setVolume(double volume) => _player.setVolume(volume);
-  @override
-  Future<void> dispose() => _player.dispose();
-}
+import 'package:svga_next_audioplayers/svga_next_audioplayers.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SvgaAudio.backend = AudioplayersBackend();
+  SvgaAudio.backend = const SvgaAudioplayersBackend();
   SvgaConfig.diskCacheDirectory = '${Directory.systemTemp.path}/svga_cache';
   SvgaCache.instance.maxBytes = 96 << 20;
   runApp(const MaterialApp(home: GiftDemo()));

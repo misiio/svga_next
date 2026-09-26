@@ -5,6 +5,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audioplayers: ^6.0.0
   svga_next:
     path: ../
+  svga_next_audioplayers:
+    path: ../../svga_next_audioplayers
+
+dev_dependencies:
+  flutter_lints: ^4.0.0
