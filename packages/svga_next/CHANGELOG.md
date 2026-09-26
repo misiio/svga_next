@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 - Fix the example dependency conflict by resolving both svga_next and its audio backend from pub.dev.
 - Fix bitmap mattes rendering blank when the mask image is stored without the `.matte` suffix. The painter now tries the exact matte key first and then the key without `.matte`.

@@ -1,6 +1,6 @@
 name: svga_next_audioplayers
 description: Audio backend for the svga_next Flutter SVGA player using audioplayers, with playback controls and automatic temporary file cleanup.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/misiio/svga_next
 
 environment:

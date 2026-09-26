@@ -11,7 +11,7 @@ Flutter 3.44 and Dart 3.6 or later, matching the requirements of `audioplayers 6
 ```yaml
 dependencies:
   svga_next: ^0.1.0
-  svga_next_audioplayers: ^0.1.0
+  svga_next_audioplayers: ^0.1.1
 ```
 
 Run `flutter pub get`.

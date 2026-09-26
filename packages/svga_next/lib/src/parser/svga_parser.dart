@@ -472,7 +472,7 @@ MovieData _parseZip(Uint8List bytes, bool keepAudio) {
     if (!f.isFile) continue;
     final name = f.name.split('/').last;
     if (name.isEmpty || name.startsWith('.')) continue;
-    final Object? content = f.content;
+    final Object content = f.content;
     files[name] = content is Uint8List ? content : Uint8List.fromList((content as List).cast<int>());
   }
   final binary = files.remove('movie.binary');

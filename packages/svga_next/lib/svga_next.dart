@@ -1,5 +1,4 @@
-/// High-performance SVGA player for Flutter.
-library svga_next;
+// High-performance SVGA player for Flutter.
 
 export 'src/audio/svga_audio.dart' show SvgaAudio, SvgaAudioBackend, SvgaAudioTrack;
 export 'src/cache/svga_cache.dart';
