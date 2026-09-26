@@ -6,7 +6,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  svga_next: ^0.1.1
+  svga_next: ^0.1.2
   svga_next_audioplayers: ^0.1.0
 
 dev_dependencies:

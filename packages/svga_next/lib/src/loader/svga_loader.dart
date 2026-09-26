@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:collection';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -5,12 +7,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
 import '../cache/svga_cache.dart';
+import '../config.dart';
 import '../model/movie_data.dart';
 import '../movie/svga_movie.dart';
 import 'svga_decode_options.dart';
 import 'svga_source.dart';
 
 abstract final class SvgaLoader {
+  static int _activeLoads = 0;
+  static final Queue<Completer<void>> _pendingLoads = Queue();
+
   /// Loads, parses (background isolate) and pre-decodes every bitmap before
   /// completing, so frame 1 never waits on a decode.
   ///
@@ -41,8 +47,25 @@ abstract final class SvgaLoader {
 
   static Future<SvgaMovie> _loadUncached(
       SvgaSource source, SvgaDecodeOptions options) async {
-    final data = await source.parse(options);
-    return materialize(data, options);
+    final slot = Completer<void>();
+    _pendingLoads.addLast(slot);
+    _startPendingLoads();
+    await slot.future;
+    try {
+      final data = await source.parse(options);
+      return await materialize(data, options);
+    } finally {
+      _activeLoads--;
+      _startPendingLoads();
+    }
+  }
+
+  static void _startPendingLoads() {
+    while (_pendingLoads.isNotEmpty &&
+        _activeLoads < SvgaConfig.maxConcurrentLoads) {
+      _activeLoads++;
+      _pendingLoads.removeFirst().complete();
+    }
   }
 
   /// Turns parsed data into GPU-ready `ui.Image`s and purges every encoded

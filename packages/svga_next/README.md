@@ -16,7 +16,7 @@ Add the package to your app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  svga_next: ^0.1.1
+  svga_next: ^0.1.2
 ```
 
 Then run `flutter pub get`.
@@ -63,10 +63,13 @@ class AnimationView extends StatelessWidget {
 ```dart
 SvgaSource.network('https://example.com/animation.svga');
 SvgaSource.file('/path/to/animation.svga');
+SvgaSource.file('/cache/animation.svga', cacheKey: 'animation-url');
 SvgaSource.memory(bytes);
 ```
 
 For network requests, pass `headers` to `SvgaSource.network`. To use your own HTTP client, download the bytes yourself and pass them to `SvgaSource.memory`. `HttpOverrides.global` does not apply to the package's background isolate.
+
+File sources use `file:<path>` as their cache key by default. Pass `cacheKey` to use `file:<cacheKey>` instead, for example when a download moves between local paths. File sources with the same effective key compare equal and share a movie when their decode options match. Reuse a key only for the same animation. Memory sources accept an optional `cacheKey` too; without one, each load is uncached.
 
 ## Control playback
 
@@ -132,6 +135,8 @@ SvgaPlayer(
 
 Dispose of the entity when its owner is removed. `setImage`, `setTextSpan`, `setDrawer`, and `setHidden` provide other replacement options. `SvgaPlayer` waits up to 1.5 seconds for pending `setImageProvider` calls before autoplay starts. Set `waitForDynamicImages` to change that limit.
 
+Call `movie.layoutSizeOf('avatar')` to size a replacement image for a slot. It returns the first matching sprite's first visible frame with positive width and height, ignoring the transform. The size is in viewBox units; multiply it by the display scale and device pixel ratio for a pixel size. It returns `null` if the key is missing or the first matching sprite has no visible frame with positive dimensions.
+
 ## Enable audio
 
 Audio playback requires a backend. Add either [`svga_next_audioplayers`](https://pub.dev/packages/svga_next_audioplayers) or [`svga_next_just_audio`](https://pub.dev/packages/svga_next_just_audio) to your app, then register it before loading animations. For example:
@@ -152,6 +157,8 @@ Without a backend, the player ignores audio. To discard audio while decoding, pa
 ## Cache and decode options
 
 Loaded movies with a source cache key share an in-memory cache. Set `SvgaCache.instance.maxBytes` to change its memory budget. To cache downloaded SVGA files on disk, set `SvgaConfig.diskCacheDirectory` to a writable directory at startup. The disk cache is disabled by default.
+
+`SvgaConfig.maxConcurrentLoads` limits uncached loads across all sources and cache instances. The default is 2, and the value must be positive. Each slot covers parsing and image decoding. Waiting loads start in FIFO order, while cache hits and requests sharing an in-flight load bypass the queue. Lowering the limit lets active loads finish and applies the new limit to subsequent slot acquisitions.
 
 Use `SvgaDecodeOptions(maxImageDimension: 1024)` to cap decoded image dimensions, or change `decodeConcurrency` to limit simultaneous image decodes. Pass the options to `SvgaPlayer.decodeOptions` or `SvgaLoader.load(options: ...)`. Call `SvgaLoader.preload(source)` to load a cached animation before showing it.
 

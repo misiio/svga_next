@@ -15,7 +15,10 @@ sealed class SvgaSource {
       NetworkSvgaSource;
   const factory SvgaSource.asset(String name, {AssetBundle? bundle, String? package}) =
       AssetSvgaSource;
-  const factory SvgaSource.file(String path) = FileSvgaSource;
+
+  /// A local file, optionally shared by a stable key across different paths.
+  const factory SvgaSource.file(String path, {String? cacheKey}) = FileSvgaSource;
+
   const factory SvgaSource.memory(Uint8List bytes, {String? cacheKey}) = MemorySvgaSource;
 
   String? get cacheKey;
@@ -86,22 +89,23 @@ final class AssetSvgaSource extends SvgaSource {
 }
 
 final class FileSvgaSource extends SvgaSource {
-  const FileSvgaSource(this.path);
+  const FileSvgaSource(this.path, {String? cacheKey}) : _cacheKey = cacheKey;
 
   final String path;
+  final String? _cacheKey;
 
   @override
-  String get cacheKey => 'file:$path';
+  String get cacheKey => 'file:${_cacheKey ?? path}';
 
   @override
   Future<MovieData> parse(SvgaDecodeOptions options) =>
       parseFileInBackground(path, keepAudio: options.enableAudio);
 
   @override
-  bool operator ==(Object other) => other is FileSvgaSource && other.path == path;
+  bool operator ==(Object other) => other is FileSvgaSource && other.cacheKey == cacheKey;
 
   @override
-  int get hashCode => path.hashCode;
+  int get hashCode => cacheKey.hashCode;
 
   @override
   String toString() => 'SvgaSource.file($path)';

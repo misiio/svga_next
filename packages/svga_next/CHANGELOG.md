@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Add `SvgaConfig.maxConcurrentLoads`, defaulting to 2, to limit uncached loads through parsing and image decoding. Cache hits and shared in-flight loads bypass the FIFO queue.
+- Add `SvgaMovie.layoutSizeOf(key)` to read a slot's native size in viewBox units from its first visible frame with positive dimensions, before its transform.
+- Add an optional `cacheKey` to `SvgaSource.file` so files at different paths can share a cached movie.
+
 ## 0.1.1
 
 - Fix the example dependency conflict by resolving both svga_next and its audio backend from pub.dev.

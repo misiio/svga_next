@@ -3,7 +3,7 @@ description: >-
   High-performance SVGA player for Flutter. Background-isolate parsing,
   streaming protobuf decode, GPU pre-decoding, audio, dynamic images, text
   and custom drawers.
-version: 0.1.1
+version: 0.1.2
 repository: https://github.com/misiio/svga_next
 
 environment:

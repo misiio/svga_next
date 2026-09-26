@@ -57,6 +57,25 @@ class SvgaMovie {
   ui.Image? imageFor(String key) => _images[key];
   SpriteData? spriteForKey(String key) => _spritesByKey[key];
 
+  /// The slot's native size in viewBox units, before its transform.
+  ///
+  /// Uses the first visible frame with positive width and height in the first
+  /// sprite matching [key]. Returns `null` if there is no such frame.
+  /// Multiply by the display scale and device pixel ratio for a pixel size.
+  ui.Size? layoutSizeOf(String key) {
+    final track = _spritesByKey[key]?.track;
+    if (track == null) return null;
+    for (var frame = track.firstVisible; frame <= track.lastVisible; frame++) {
+      final offset = frame * FrameTrack.stride;
+      final width = track.values[offset + 3];
+      final height = track.values[offset + 4];
+      if (track.visibleAt(frame) && width > 0 && height > 0) {
+        return ui.Size(width, height);
+      }
+    }
+    return null;
+  }
+
   /// Built once per distinct path, then reused every frame.
   ui.Path pathOf(PathData p) => _paths[p.id] ??= _buildPath(p);
 
