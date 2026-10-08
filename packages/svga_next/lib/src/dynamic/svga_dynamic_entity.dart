@@ -103,7 +103,8 @@ class SvgaDynamicEntity extends ChangeNotifier {
   /// are not clamped, so frames with a zero delay advance every vsync. After
   /// a pause the image continues from wherever Flutter's stream is, and
   /// restarts from its first frame if `ImageCache` has evicted it. An error
-  /// after the first frame keeps the last good frame.
+  /// after the first frame keeps the last good frame. A call replaced before
+  /// its first frame completes with `false`.
   ///
   /// Tip: wrap avatars in `ResizeImage(provider, width: 128)` – decoding a
   /// 1080px avatar for a 60pt circle wastes texture memory.
@@ -326,8 +327,7 @@ final class _AnimatedImage {
   late final ImageStreamListener _listener;
   ImageStream? _stream;
   bool _attaching = false;
-
-  bool get hasFrame => ready.isCompleted;
+  bool hasFrame = false;
 
   void attach() {
     if (_stream != null) return;
@@ -351,11 +351,18 @@ final class _AnimatedImage {
     if (!ready.isCompleted) ready.complete(false);
   }
 
-  bool get _current => identical(_entity._animated[_key], this);
+  bool get _isCurrent => identical(_entity._animated[_key], this);
 
   void _onImage(ImageInfo info, bool synchronousCall) {
     try {
-      if (!_current) return;
+      if (!_isCurrent) return;
+      final first = !hasFrame;
+      // Before the notify below, whose listeners may already replace the key.
+      if (first) {
+        hasFrame = true;
+        ready.complete(true);
+        if (_entity._players.isEmpty) detach();
+      }
       final shown = _entity._images[_key]?.image;
       if (shown == null || !info.image.isCloneOf(shown)) {
         // Re-attaching hands back the stream's current frame synchronously,
@@ -363,15 +370,11 @@ final class _AnimatedImage {
         _entity._putImage(
           _key,
           SvgaDynamicImage._(info.image.clone(), _fit, _circle, _cornerRadius),
-          notify: !(_attaching && hasFrame),
+          notify: first || !_attaching,
         );
       }
     } finally {
       info.dispose();
-    }
-    if (!ready.isCompleted) {
-      ready.complete(true);
-      if (_entity._players.isEmpty) detach();
     }
   }
 
@@ -379,7 +382,7 @@ final class _AnimatedImage {
     if (kDebugMode) {
       debugPrint('svga_next: dynamic image "$_key" failed: $error');
     }
-    if (_current) _entity._animated.remove(_key);
+    if (_isCurrent) _entity._animated.remove(_key);
     cancel();
   }
 }

@@ -174,6 +174,22 @@ void main() {
     expect(await ready, isFalse);
   });
 
+  _testEntity('a first frame replaced while notifying still completes with true', (tester, entity) async {
+    final provider = _ControlledProvider();
+    final ready = entity.setImageProvider(_key, provider: provider, animate: true);
+    void replace() {
+      entity
+        ..removeListener(replace)
+        ..remove(_key);
+    }
+
+    entity.addListener(replace);
+    provider.emit('red');
+
+    expect(await ready, isTrue);
+    expect(provider.listened, isFalse);
+  });
+
   _testEntity('an error before the first frame completes with false', (tester, entity) async {
     final provider = _ControlledProvider();
     final ready = entity.setImageProvider(_key, provider: provider, animate: true);
