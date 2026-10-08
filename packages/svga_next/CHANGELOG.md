@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Add `animate` to `SvgaDynamicEntity.setImageProvider` to play animated GIF and WebP dynamic images. Frames advance only while an `SvgaPlayer` using the entity is mounted, and follow Flutter's image stream timing. Embedded images still show their first frame.
+
 ## 0.1.2
 
 - Add `SvgaConfig.maxConcurrentLoads`, defaulting to 2, to limit uncached loads through parsing and image decoding. Cache hits and shared in-flight loads bypass the FIFO queue.

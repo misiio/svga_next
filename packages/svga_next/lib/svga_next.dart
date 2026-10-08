@@ -3,7 +3,7 @@
 export 'src/audio/svga_audio.dart' show SvgaAudio, SvgaAudioBackend, SvgaAudioTrack;
 export 'src/cache/svga_cache.dart';
 export 'src/config.dart';
-export 'src/dynamic/svga_dynamic_entity.dart';
+export 'src/dynamic/svga_dynamic_entity.dart' hide SvgaDynamicEntityPlayers;
 export 'src/errors.dart';
 export 'src/loader/svga_decode_options.dart';
 export 'src/loader/svga_loader.dart';

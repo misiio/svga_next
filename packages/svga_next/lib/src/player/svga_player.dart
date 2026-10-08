@@ -89,6 +89,8 @@ class _SvgaPlayerState extends State<SvgaPlayer>
       ..fillMode = widget.fillMode
       ..addListener(_onControllerChanged);
     _shown = _controller.movie;
+    // Animated dynamic images only advance while a player shows them.
+    widget.dynamicEntity?.registerPlayer(this);
     _load();
   }
 
@@ -100,6 +102,10 @@ class _SvgaPlayerState extends State<SvgaPlayer>
       oldController?.removeListener(_onControllerChanged);
       _controller.addListener(_onControllerChanged);
       _shown = _controller.movie;
+    }
+    if (!identical(old.dynamicEntity, widget.dynamicEntity)) {
+      old.dynamicEntity?.unregisterPlayer(this);
+      widget.dynamicEntity?.registerPlayer(this);
     }
     _controller.fillMode = widget.fillMode;
     if (widget.source != old.source || widget.decodeOptions != old.decodeOptions) _load();
@@ -167,6 +173,7 @@ class _SvgaPlayerState extends State<SvgaPlayer>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     (widget.controller ?? _own)?.removeListener(_onControllerChanged);
+    widget.dynamicEntity?.unregisterPlayer(this);
     _gen++;
     _own?.dispose();
     super.dispose();

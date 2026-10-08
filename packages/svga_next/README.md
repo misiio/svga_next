@@ -16,7 +16,7 @@ Add the package to your app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  svga_next: ^0.1.2
+  svga_next: ^0.1.3
 ```
 
 Then run `flutter pub get`.
@@ -136,6 +136,26 @@ SvgaPlayer(
 Dispose of the entity when its owner is removed. `setImage`, `setTextSpan`, `setDrawer`, and `setHidden` provide other replacement options. `SvgaPlayer` waits up to 1.5 seconds for pending `setImageProvider` calls before autoplay starts. Set `waitForDynamicImages` to change that limit.
 
 Call `movie.layoutSizeOf('avatar')` to size a replacement image for a slot. It returns the first matching sprite's first visible frame with positive width and height, ignoring the transform. The size is in viewBox units; multiply it by the display scale and device pixel ratio for a pixel size. It returns `null` if the key is missing or the first matching sprite has no visible frame with positive dimensions.
+
+### Animated dynamic images
+
+Pass `animate: true` to `setImageProvider` to play an animated GIF or WebP in a layer, such as an animated avatar:
+
+```dart
+dynamicEntity.setImageProvider(
+  'avatar',
+  provider: NetworkImage(avatarUrl),
+  circle: true,
+  animate: true,
+);
+```
+
+- `fit`, `circle`, and `cornerRadius` apply to every frame. A single-frame image behaves as it does without `animate`, and the returned future still completes on the first frame.
+- Only dynamic images animate. Images embedded in the SVGA file always show their first frame.
+- Frames advance only while an `SvgaPlayer` using the entity is mounted. Listening to the entity with `addListener` does not start them. Without a mounted player, the image keeps its current frame.
+- When a player mounts again, the image continues from wherever Flutter's image stream is. If `ImageCache` evicted the image in the meantime, it restarts from its first frame.
+- Timing and looping follow Flutter's `Image` widget. Frame delays are not clamped, so frames with a zero delay advance on every vsync ([flutter/flutter#29130](https://github.com/flutter/flutter/issues/29130)).
+- If a later frame fails to decode, the layer keeps the last good frame.
 
 ## Enable audio
 

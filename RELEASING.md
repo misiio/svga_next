@@ -1,6 +1,6 @@
 # Release the packages
 
-The next release contains `svga_next 0.1.2`.
+The next release contains `svga_next 0.1.3`.
 `svga_next_audioplayers` remains at `0.1.1`, and `svga_next_just_audio`
 remains at `0.1.0`. Both backend constraints already allow the new core version.
 
@@ -28,8 +28,8 @@ Commit the release files before publishing to avoid the dirty checkout warning.
 
 ## Publish and validate hosted dependencies
 
-1. Run `flutter pub publish` from `packages/svga_next` to publish `svga_next 0.1.2`.
-2. Wait until `svga_next 0.1.2` is available on pub.dev.
+1. Run `flutter pub publish` from `packages/svga_next` to publish `svga_next 0.1.3`.
+2. Wait until `svga_next 0.1.3` is available on pub.dev.
 3. Validate both backends and the example against the hosted release as described below.
 
 Publication requires pub.dev credentials. The backends do not need new releases.
