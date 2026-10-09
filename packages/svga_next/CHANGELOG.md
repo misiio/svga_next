@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add `maxImageDimension` to `SvgaDynamicEntity.setImageProvider`. Every frame of a dynamic image whose longest side exceeds the cap, in pixels, is downscaled to it with its aspect ratio kept, for still and animated images alike. Without it, behaviour is unchanged.
+
 ## 0.1.4
 
 - Fix `maxImageDimension` not capping multi-frame GIF and WebP embedded images. Their first frame is now downscaled like a single-frame image.

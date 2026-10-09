@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import '../image_cap.dart';
+
 /// Custom per-layer painting. [bounds] is the sprite's layout rect in the
 /// sprite's local (already transformed & clipped) space; [alpha] is the
 /// layer's current opacity.
@@ -106,6 +108,13 @@ class SvgaDynamicEntity extends ChangeNotifier {
   /// after the first frame keeps the last good frame. A call replaced before
   /// its first frame completes with `false`.
   ///
+  /// With [maxImageDimension] (in pixels), every frame whose longest side
+  /// is larger is downscaled to it, keeping its aspect ratio, before it is
+  /// stored; smaller frames are stored as they are. It is the only bound on
+  /// animated frames, because the engine ignores target sizes for
+  /// multi-frame images (flutter/flutter#137668). Each call replaces the cap
+  /// of the previous one for [key].
+  ///
   /// Tip: wrap avatars in `ResizeImage(provider, width: 128)` – decoding a
   /// 1080px avatar for a 60pt circle wastes texture memory.
   Future<bool> setImageProvider(
@@ -116,35 +125,52 @@ class SvgaDynamicEntity extends ChangeNotifier {
     double cornerRadius = 0,
     ImageConfiguration configuration = ImageConfiguration.empty,
     bool animate = false,
+    int? maxImageDimension,
   }) {
     final gen = _bump(key);
     if (animate) {
-      final animated = _animated[key] = _AnimatedImage(
-          this, key, provider, configuration, fit, circle, cornerRadius);
+      final animated = _animated[key] = _AnimatedImage(this, key, provider,
+          configuration, fit, circle, cornerRadius, maxImageDimension);
       animated.attach();
       return _track(animated.ready.future);
     }
     final completer = Completer<bool>();
     final stream = provider.resolve(configuration);
     late final ImageStreamListener listener;
+    void onError(Object error, StackTrace? stack) {
+      if (kDebugMode) {
+        debugPrint('svga_next: dynamic image "$key" failed: $error');
+      }
+      if (!completer.isCompleted) completer.complete(false);
+    }
+
+    void store(ui.Image image) {
+      if (!_disposed && _generation[key] == gen) {
+        _putImage(key, SvgaDynamicImage._(image, fit, circle, cornerRadius));
+      } else {
+        image.dispose();
+      }
+      if (!completer.isCompleted) completer.complete(true);
+    }
+
     listener = ImageStreamListener(
       (info, _) {
         stream.removeListener(listener);
-        if (!_disposed && _generation[key] == gen) {
-          _putImage(
-              key,
-              SvgaDynamicImage._(
-                  info.image.clone(), fit, circle, cornerRadius));
+        final FutureOr<ui.Image> image;
+        try {
+          image = cappedClone(info.image, maxImageDimension);
+        } finally {
+          info.dispose();
         }
-        info.dispose();
-        if (!completer.isCompleted) completer.complete(true);
+        if (image is ui.Image) {
+          store(image);
+        } else {
+          image.then(store, onError: onError);
+        }
       },
       onError: (Object error, StackTrace? stack) {
         stream.removeListener(listener);
-        if (kDebugMode) {
-          debugPrint('svga_next: dynamic image "$key" failed: $error');
-        }
-        if (!completer.isCompleted) completer.complete(false);
+        onError(error, stack);
       },
     );
     stream.addListener(listener);
@@ -312,6 +338,7 @@ final class _AnimatedImage {
     this._fit,
     this._circle,
     this._cornerRadius,
+    this._maxDimension,
   ) {
     _listener = ImageStreamListener(_onImage, onError: _onError);
   }
@@ -323,11 +350,17 @@ final class _AnimatedImage {
   final BoxFit _fit;
   final bool _circle;
   final double _cornerRadius;
+  final int? _maxDimension;
   final Completer<bool> ready = Completer<bool>();
   late final ImageStreamListener _listener;
   ImageStream? _stream;
   bool _attaching = false;
   bool hasFrame = false;
+
+  /// Frames received, and the number of the frame shown, so a downscale that
+  /// finishes late never replaces a newer frame.
+  int _received = 0;
+  int _shown = 0;
 
   void attach() {
     if (_stream != null) return;
@@ -354,28 +387,54 @@ final class _AnimatedImage {
   bool get _isCurrent => identical(_entity._animated[_key], this);
 
   void _onImage(ImageInfo info, bool synchronousCall) {
+    final FutureOr<ui.Image> image;
     try {
       if (!_isCurrent) return;
-      final first = !hasFrame;
-      // Before the notify below, whose listeners may already replace the key.
-      if (first) {
+      if (!hasFrame) {
         hasFrame = true;
-        ready.complete(true);
         if (_entity._players.isEmpty) detach();
       }
       final shown = _entity._images[_key]?.image;
-      if (shown == null || !info.image.isCloneOf(shown)) {
-        // Re-attaching hands back the stream's current frame synchronously,
-        // possibly while a player builds; it gets painted without a notify.
-        _entity._putImage(
-          _key,
-          SvgaDynamicImage._(info.image.clone(), _fit, _circle, _cornerRadius),
-          notify: first || !_attaching,
-        );
+      // Already shown, and within this call's cap. A downscaled frame never
+      // matches, so re-attaching downscales the current frame again.
+      if (shown != null &&
+          info.image.isCloneOf(shown) &&
+          cappedSize(shown.width, shown.height, _maxDimension) == null) {
+        if (!ready.isCompleted) ready.complete(true);
+        return;
       }
+      image = cappedClone(info.image, _maxDimension);
     } finally {
       info.dispose();
     }
+    final frame = ++_received;
+    if (image is ui.Image) {
+      _show(frame, image);
+    } else {
+      image.then((image) => _show(frame, image), onError: (Object e, s) {
+        // A frame already replaced by a newer one can't stop the animation.
+        if (frame > _shown) _onError(e, s);
+      });
+    }
+  }
+
+  void _show(int frame, ui.Image image) {
+    if (!_isCurrent || frame < _shown) {
+      image.dispose();
+      return;
+    }
+    _shown = frame;
+    final first = !ready.isCompleted;
+    // Before the notify below, whose listeners may already replace the key.
+    if (first) ready.complete(true);
+    // Re-attaching hands back the stream's current frame synchronously,
+    // possibly while a player builds; a frame stored right then gets painted
+    // without a notify.
+    _entity._putImage(
+      _key,
+      SvgaDynamicImage._(image, _fit, _circle, _cornerRadius),
+      notify: first || !_attaching,
+    );
   }
 
   void _onError(Object error, StackTrace? stack) {

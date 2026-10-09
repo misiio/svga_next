@@ -10,6 +10,8 @@ import 'package:svga_next/src/player/svga_player.dart';
 // Both fixtures are 8x8 and loop forever: red, green, blue, 100 ms each.
 final Uint8List _gif = File('test/fixtures/animated.gif').readAsBytesSync();
 final Uint8List _webp = File('test/fixtures/animated.webp').readAsBytesSync();
+// 400x300, red then green, looping.
+final Uint8List _bigGif = File('test/fixtures/animated_400x300.gif').readAsBytesSync();
 
 const _key = 'avatar';
 
@@ -219,6 +221,130 @@ void main() {
     expect(await frames.colours(tester), ['red', 'green']);
   });
 
+  group('maxImageDimension', () {
+    _testEntity('caps an oversized first frame, keeping its aspect ratio', (tester, entity) async {
+      final provider = _ControlledProvider();
+      final ready = entity.setImageProvider(_key, provider: provider, animate: true, maxImageDimension: 4);
+      provider.emit('red', width: 8, height: 6);
+
+      expect(await tester.runAsync(() => ready), isTrue);
+      expect(_size(entity), [4, 3]);
+      expect(await _Frames(entity).colours(tester), ['red']);
+    });
+
+    _testEntity('caps an oversized later frame', (tester, entity) async {
+      final provider = _ControlledProvider();
+      final frames = _Frames(entity);
+      entity
+        ..registerPlayer(_player)
+        ..setImageProvider(_key, provider: provider, animate: true, maxImageDimension: 4);
+      provider.emit('red', width: 8, height: 6);
+      await _until(tester, () => frames.count == 1);
+
+      provider.emit('green', width: 6, height: 12);
+      await _until(tester, () => frames.count == 2);
+      expect(_size(entity), [2, 4]);
+      expect(await frames.colours(tester), ['red', 'green']);
+    });
+
+    _testEntity('leaves a frame within the cap unchanged', (tester, entity) async {
+      final provider = _ControlledProvider();
+      entity
+        ..registerPlayer(_player)
+        ..setImageProvider(_key, provider: provider, animate: true, maxImageDimension: 4);
+      final source = _solid('red', width: 4, height: 3);
+      final kept = source.clone();
+      addTearDown(kept.dispose);
+      provider.emitImage(source);
+
+      expect(entity.imageFor(_key)?.image.isCloneOf(kept), isTrue, reason: 'stored as it arrives, without a resize');
+    });
+
+    for (final animate in [false, true]) {
+      _testEntity('keeps no handle to an oversized frame (animate: $animate)', (tester, entity) async {
+        final provider = _ControlledProvider();
+        final source = _solid('red', width: 8, height: 6);
+        final kept = source.clone();
+        addTearDown(kept.dispose);
+        final ready = entity.setImageProvider(_key, provider: provider, animate: animate, maxImageDimension: 4);
+        provider.emitImage(source);
+        expect(await tester.runAsync(() => ready), isTrue);
+
+        final handles = kept.debugGetOpenHandleStackTraces()!;
+        expect(handles.where((stack) => '$stack'.contains('package:svga_next/')), isEmpty);
+      });
+    }
+
+    _testEntity('caps a still image', (tester, entity) async {
+      final provider = _ControlledProvider();
+      final ready = entity.setImageProvider(_key, provider: provider, maxImageDimension: 4);
+      provider.emit('red', width: 8, height: 6);
+
+      expect(await tester.runAsync(() => ready), isTrue);
+      expect(_size(entity), [4, 3]);
+    });
+
+    _testEntity('caps every frame of a decoded animated image', (tester, entity) async {
+      entity.registerPlayer(_player);
+      final frames = _Frames(entity);
+      final sizes = <String>{};
+      entity.addListener(() => sizes.add('${_size(entity)}'));
+
+      final ready = entity.setImageProvider(_key, provider: MemoryImage(_bigGif), animate: true, maxImageDimension: 40);
+      await _until(tester, () => frames.count >= 3);
+
+      expect(await tester.runAsync(() => ready), isTrue);
+      expect(await frames.colours(tester), containsAllInOrder(['red', 'green', 'red']));
+      expect(sizes, {'[40, 30]'});
+    });
+
+    _testEntity('setting the key again uses the new cap', (tester, entity) async {
+      final first = _ControlledProvider();
+      final ready = entity.setImageProvider(_key, provider: first, maxImageDimension: 4);
+      first.emit('red', width: 8, height: 4);
+      expect(await tester.runAsync(() => ready), isTrue);
+      expect(_size(entity), [4, 2]);
+
+      final second = _ControlledProvider();
+      final again = entity.setImageProvider(_key, provider: second, maxImageDimension: 2);
+      second.emit('red', width: 8, height: 4);
+      expect(await tester.runAsync(() => again), isTrue);
+      expect(_size(entity), [2, 1]);
+    });
+
+    _testEntity('setting the key again with the same stream applies the new cap', (tester, entity) async {
+      final provider = _ControlledProvider();
+      entity.setImageProvider(_key, provider: provider, animate: true);
+      provider.emit('red', width: 8, height: 4);
+      expect(_size(entity), [8, 4]);
+
+      final again = entity.setImageProvider(_key, provider: provider, animate: true, maxImageDimension: 4);
+      expect(await tester.runAsync(() => again), isTrue);
+      expect(_size(entity), [4, 2]);
+    });
+
+    for (final animate in [false, true]) {
+      _testEntity('a key changed during a resize keeps the change (animate: $animate)', (tester, entity) async {
+        final provider = _ControlledProvider();
+        final ready = entity.setImageProvider(_key, provider: provider, animate: animate, maxImageDimension: 4);
+        provider.emit('red', width: 8, height: 6);
+        entity.remove(_key);
+
+        await _advance(tester, const Duration(milliseconds: 100));
+        expect(entity.imageFor(_key), isNull);
+        expect(await tester.runAsync(() => ready), animate ? isFalse : isTrue);
+      });
+    }
+
+    _testEntity('without a cap an oversized frame is stored as it arrives', (tester, entity) async {
+      final provider = _ControlledProvider();
+      entity.setImageProvider(_key, provider: provider, animate: true);
+      provider.emit('red', width: 8, height: 6);
+
+      expect(_size(entity), [8, 6]);
+    });
+  });
+
   group('SvgaPlayer', () {
     Widget player(SvgaDynamicEntity? entity) =>
         Directionality(textDirection: TextDirection.ltr, child: SvgaPlayer(dynamicEntity: entity));
@@ -311,6 +437,20 @@ Future<bool> _set(
   return ready;
 }
 
+/// Lets real decoding and resizing run until [done], for at most a second.
+Future<void> _until(WidgetTester tester, bool Function() done) async {
+  for (var i = 0; i < 100 && !done(); i++) {
+    await _advance(tester, const Duration(milliseconds: 10));
+  }
+  expect(done(), isTrue, reason: 'timed out');
+}
+
+/// The width and height of the image shown for [_key].
+List<int>? _size(SvgaDynamicEntity entity) {
+  final image = entity.imageFor(_key)?.image;
+  return image == null ? null : [image.width, image.height];
+}
+
 /// Lets real decoding and Flutter's frame scheduling run for [duration].
 Future<void> _advance(WidgetTester tester, Duration duration) async {
   const step = Duration(milliseconds: 10);
@@ -326,7 +466,10 @@ class _ControlledProvider extends ImageProvider<_ControlledProvider> {
 
   bool get listened => _completer.hasListeners;
 
-  void emit(String colour) => _completer.emit(_solid(colour));
+  void emit(String colour, {int width = 2, int height = 2}) =>
+      emitImage(_solid(colour, width: width, height: height));
+
+  void emitImage(ui.Image image) => _completer.emit(image);
 
   void fail() => _completer.fail();
 
@@ -344,8 +487,8 @@ class _ControlledCompleter extends ImageStreamCompleter {
   void fail() => reportError(exception: StateError('broken frame'), silent: true);
 }
 
-/// A 2x2 image of [colour] ('red', 'green' or 'blue').
-ui.Image _solid(String colour) {
+/// An image of [colour] ('red', 'green' or 'blue'), 2x2 by default.
+ui.Image _solid(String colour, {int width = 2, int height = 2}) {
   final recorder = ui.PictureRecorder();
   ui.Canvas(recorder).drawColor(
     switch (colour) {
@@ -357,7 +500,7 @@ ui.Image _solid(String colour) {
   );
   final picture = recorder.endRecording();
   try {
-    return picture.toImageSync(2, 2);
+    return picture.toImageSync(width, height);
   } finally {
     picture.dispose();
   }

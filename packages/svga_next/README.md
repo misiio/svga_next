@@ -157,6 +157,26 @@ dynamicEntity.setImageProvider(
 - Timing and looping follow Flutter's `Image` widget. Frame delays are not clamped, so frames with a zero delay advance on every vsync ([flutter/flutter#29130](https://github.com/flutter/flutter/issues/29130)).
 - If a later frame fails to decode, the layer keeps the last good frame.
 
+### Capping dynamic image size
+
+Pass `maxImageDimension` to `setImageProvider` to bound the memory of a dynamic image. The value is in pixels, as in `SvgaDecodeOptions.maxImageDimension`, and there is no cap by default:
+
+```dart
+dynamicEntity.setImageProvider(
+  'avatar',
+  provider: NetworkImage(avatarUrl),
+  circle: true,
+  animate: true,
+  maxImageDimension: 180,
+);
+```
+
+- Every frame whose longest side is larger than the cap, the first one and each later animated frame, is downscaled to it before it is painted. The aspect ratio is kept, so `fit`, `circle`, and `cornerRadius` behave as for any other image.
+- Frames at or under the cap are stored unchanged, without a resize.
+- Still images are capped too, so the option means the same thing for every frame count.
+- The cap is the only bound on animated frames: Flutter's decoder ignores target sizes such as `ResizeImage` for multi-frame GIF and WebP images ([flutter/flutter#137668](https://github.com/flutter/flutter/issues/137668)).
+- The cap belongs to the call. Setting the key again uses the new call's cap.
+
 ## Enable audio
 
 Audio playback requires a backend. Add either [`svga_next_audioplayers`](https://pub.dev/packages/svga_next_audioplayers) or [`svga_next_just_audio`](https://pub.dev/packages/svga_next_just_audio) to your app, then register it before loading animations. For example:

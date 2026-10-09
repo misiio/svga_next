@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
 import '../cache/svga_cache.dart';
 import '../config.dart';
+import '../image_cap.dart';
 import '../model/movie_data.dart';
 import '../movie/svga_movie.dart';
 import 'svga_decode_options.dart';
@@ -117,47 +118,20 @@ abstract final class SvgaLoader {
     } finally {
       buffer.dispose();
     }
-    int? tw, th;
-    if (maxDim != null) {
-      final longest = math.max(descriptor.width, descriptor.height);
-      if (longest > maxDim) {
-        final s = maxDim / longest;
-        tw = math.max(1, (descriptor.width * s).round());
-        th = math.max(1, (descriptor.height * s).round());
-      }
-    }
-    final codec =
-        await descriptor.instantiateCodec(targetWidth: tw, targetHeight: th);
+    final target = cappedSize(descriptor.width, descriptor.height, maxDim);
+    final codec = await descriptor.instantiateCodec(
+        targetWidth: target?.width, targetHeight: target?.height);
     try {
       final image = (await codec.getNextFrame()).image;
       // The engine ignores the target size for multi-frame images
       // (flutter/flutter#137668), so their first frame arrives full size.
-      if (tw == null || math.max(image.width, image.height) <= maxDim!) {
+      if (cappedSize(image.width, image.height, maxDim) == null) {
         return image;
       }
-      return await _downscale(image, tw, th!);
+      return await downscale(image, target!.width, target.height);
     } finally {
       codec.dispose();
       descriptor.dispose();
-    }
-  }
-
-  /// Redraws [image] at [width]x[height] and disposes it.
-  static Future<ui.Image> _downscale(
-      ui.Image image, int width, int height) async {
-    final recorder = ui.PictureRecorder();
-    ui.Canvas(recorder).drawImageRect(
-      image,
-      ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-      ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
-      ui.Paint()..filterQuality = ui.FilterQuality.medium,
-    );
-    final picture = recorder.endRecording();
-    try {
-      return await picture.toImage(width, height);
-    } finally {
-      picture.dispose();
-      image.dispose();
     }
   }
 }
