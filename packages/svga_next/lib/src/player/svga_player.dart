@@ -109,9 +109,8 @@ class _SvgaPlayerState extends State<SvgaPlayer>
   /// `didUpdateWidget` runs first, and would register a swapped-in entity
   /// with a player that is about to hide.
   void _updateRegistration() {
-    // `TickerMode.valuesOf` is newer than the minimum Flutter this package supports.
-    // ignore: deprecated_member_use
-    final showing = TickerMode.of(context) && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
+    final showing =
+        TickerMode.valuesOf(context).enabled && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
     final entity = showing ? widget.dynamicEntity : null;
     if (identical(entity, _registeredEntity)) return;
     _registeredEntity?.unregisterPlayer(this);

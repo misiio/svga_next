@@ -6,7 +6,7 @@ SVGA parsing runs in a background isolate. The package decodes images before pla
 
 ## Requirements
 
-- Flutter 3.19 or later
+- Flutter 3.41 or later
 - Dart 3.3 or later
 - A Flutter platform that supports `dart:io`. Web is not supported.
 
