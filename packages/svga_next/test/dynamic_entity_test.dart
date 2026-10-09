@@ -398,6 +398,65 @@ void main() {
       expect(provider.listened, isTrue);
       await tester.pumpWidget(const SizedBox());
     });
+
+    for (final (name, Widget Function(bool, Widget) hiding) in [
+      ('under disabled TickerMode', (hidden, child) => TickerMode(enabled: !hidden, child: child)),
+      (
+        'with animations disabled',
+        (hidden, child) => MediaQuery(data: MediaQueryData(disableAnimations: hidden), child: child)
+      ),
+    ]) {
+      testWidgets('holds its current frame $name', (tester) async {
+        final (entity, provider) = animated();
+
+        await tester.pumpWidget(hiding(false, player(entity)));
+        expect(provider.listened, isTrue);
+        final shown = entity.imageFor(_key)?.image;
+
+        await tester.pumpWidget(hiding(true, player(entity)));
+        expect(provider.listened, isFalse);
+        expect(entity.imageFor(_key)?.image, same(shown));
+        expect(shown?.debugDisposed, isFalse);
+
+        await tester.pumpWidget(hiding(false, player(entity)));
+        expect(provider.listened, isTrue, reason: 'resumes without setting the image again');
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('never attaches an entity swapped in while hiding $name', (tester) async {
+        final (first, firstProvider) = animated();
+        final (second, secondProvider) = animated();
+
+        await tester.pumpWidget(hiding(false, player(first)));
+        final listens = secondProvider.listens;
+        await tester.pumpWidget(hiding(true, player(second)));
+        expect(firstProvider.listened, isFalse);
+        expect(secondProvider.listens, listens);
+
+        await tester.pumpWidget(hiding(false, player(second)));
+        expect(secondProvider.listened, isTrue);
+        await tester.pumpWidget(const SizedBox());
+      });
+
+      testWidgets('keeps the entity animating while another player shows it and one is hidden $name',
+          (tester) async {
+        final (entity, provider) = animated();
+        Widget players({required bool bothHidden}) => Directionality(
+              textDirection: TextDirection.ltr,
+              child: Column(children: [
+                hiding(true, SvgaPlayer(dynamicEntity: entity)),
+                hiding(bothHidden, SvgaPlayer(dynamicEntity: entity)),
+              ]),
+            );
+
+        await tester.pumpWidget(players(bothHidden: false));
+        expect(provider.listened, isTrue);
+
+        await tester.pumpWidget(players(bothHidden: true));
+        expect(provider.listened, isFalse);
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
   });
 }
 
@@ -466,6 +525,9 @@ class _ControlledProvider extends ImageProvider<_ControlledProvider> {
 
   bool get listened => _completer.hasListeners;
 
+  /// How many times anything started listening.
+  int get listens => _completer.listens;
+
   void emit(String colour, {int width = 2, int height = 2}) =>
       emitImage(_solid(colour, width: width, height: height));
 
@@ -482,6 +544,14 @@ class _ControlledProvider extends ImageProvider<_ControlledProvider> {
 }
 
 class _ControlledCompleter extends ImageStreamCompleter {
+  int listens = 0;
+
+  @override
+  void addListener(ImageStreamListener listener) {
+    listens++;
+    super.addListener(listener);
+  }
+
   void emit(ui.Image image) => setImage(ImageInfo(image: image));
 
   void fail() => reportError(exception: StateError('broken frame'), silent: true);

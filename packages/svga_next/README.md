@@ -152,8 +152,10 @@ dynamicEntity.setImageProvider(
 
 - `fit`, `circle`, and `cornerRadius` apply to every frame. A single-frame image behaves as it does without `animate`, and the returned future still completes on the first frame.
 - Only dynamic images animate. Images embedded in the SVGA file always show their first frame.
-- Frames advance only while an `SvgaPlayer` using the entity is mounted. Listening to the entity with `addListener` does not start them. Without a mounted player, the image keeps its current frame.
-- When a player mounts again, the image continues from wherever Flutter's image stream is. If `ImageCache` evicted the image in the meantime, it restarts from its first frame.
+- Frames advance only while an `SvgaPlayer` using the entity is showing it: mounted, with tickers enabled, and with animations not disabled for accessibility. This is the rule Flutter's `Image` widget follows for multi-frame images. A player under `TickerMode(enabled: false)`, such as a route covered by another or an offstage tab, or whose `MediaQuery` sets `disableAnimations`, does not count. Listening to the entity with `addListener` does not count either. While no player is showing the entity, the image keeps its current frame.
+- An entity shared by several players keeps animating while at least one of them is showing it.
+- When a player shows the entity again, the image continues from wherever Flutter's image stream is, without setting it again. If `ImageCache` evicted the image in the meantime, it restarts from its first frame.
+- No app lifecycle code is needed: while the app is in the background, the engine schedules no frames, so the image stops on its own.
 - Timing and looping follow Flutter's `Image` widget. Frame delays are not clamped, so frames with a zero delay advance on every vsync ([flutter/flutter#29130](https://github.com/flutter/flutter/issues/29130)).
 - If a later frame fails to decode, the layer keeps the last good frame.
 

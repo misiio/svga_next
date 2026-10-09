@@ -98,8 +98,8 @@ class SvgaDynamicEntity extends ChangeNotifier {
   /// With [animate], an animated GIF or WebP keeps playing: every frame
   /// Flutter's image stream delivers replaces the previous one, with [fit],
   /// [circle] and [cornerRadius] applied. Frames only advance while an
-  /// `SvgaPlayer` using this entity is mounted; otherwise the image holds its
-  /// current frame. The returned future still completes on the first frame.
+  /// `SvgaPlayer` is showing this entity: mounted, with tickers enabled and
+  /// animations not disabled. Otherwise the image holds its current frame. The returned future still completes on the first frame.
   ///
   /// Timing and looping are Flutter's, as in the `Image` widget: frame delays
   /// are not clamped, so frames with a zero delay advance every vsync. After
@@ -306,7 +306,8 @@ class SvgaDynamicEntity extends ChangeNotifier {
 }
 
 /// Lets `SvgaPlayer` mark the entity as on screen. Not exported: only a
-/// mounted player keeps animated images playing, a plain `addListener` doesn't.
+/// player showing the entity keeps animated images playing, a plain
+/// `addListener` doesn't.
 extension SvgaDynamicEntityPlayers on SvgaDynamicEntity {
   void registerPlayer(Object player) {
     if (_disposed || !_players.add(player) || _players.length > 1) return;

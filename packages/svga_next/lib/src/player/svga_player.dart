@@ -78,6 +78,9 @@ class _SvgaPlayerState extends State<SvgaPlayer>
   int _gen = 0;
   bool _pausedByLifecycle = false;
 
+  /// The entity this player is registered with, while showing it.
+  SvgaDynamicEntity? _registeredEntity;
+
   SvgaController get _controller =>
       widget.controller ?? (_own ??= SvgaController(vsync: this));
 
@@ -89,9 +92,30 @@ class _SvgaPlayerState extends State<SvgaPlayer>
       ..fillMode = widget.fillMode
       ..addListener(_onControllerChanged);
     _shown = _controller.movie;
-    // Animated dynamic images only advance while a player shows them.
-    widget.dynamicEntity?.registerPlayer(this);
     _load();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateRegistration();
+  }
+
+  /// Animated dynamic images only advance while a player is showing them:
+  /// mounted, with tickers enabled and animations not disabled, the rule
+  /// Flutter's `Image` uses to pause multi-frame images.
+  ///
+  /// Reads both conditions here, not in `didChangeDependencies` alone:
+  /// `didUpdateWidget` runs first, and would register a swapped-in entity
+  /// with a player that is about to hide.
+  void _updateRegistration() {
+    // `TickerMode.valuesOf` is newer than the minimum Flutter this package supports.
+    // ignore: deprecated_member_use
+    final showing = TickerMode.of(context) && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
+    final entity = showing ? widget.dynamicEntity : null;
+    if (identical(entity, _registeredEntity)) return;
+    _registeredEntity?.unregisterPlayer(this);
+    _registeredEntity = entity?..registerPlayer(this);
   }
 
   @override
@@ -103,10 +127,7 @@ class _SvgaPlayerState extends State<SvgaPlayer>
       _controller.addListener(_onControllerChanged);
       _shown = _controller.movie;
     }
-    if (!identical(old.dynamicEntity, widget.dynamicEntity)) {
-      old.dynamicEntity?.unregisterPlayer(this);
-      widget.dynamicEntity?.registerPlayer(this);
-    }
+    _updateRegistration();
     _controller.fillMode = widget.fillMode;
     if (widget.source != old.source || widget.decodeOptions != old.decodeOptions) _load();
   }
@@ -173,7 +194,7 @@ class _SvgaPlayerState extends State<SvgaPlayer>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     (widget.controller ?? _own)?.removeListener(_onControllerChanged);
-    widget.dynamicEntity?.unregisterPlayer(this);
+    _registeredEntity?.unregisterPlayer(this);
     _gen++;
     _own?.dispose();
     super.dispose();

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add `maxImageDimension` to `SvgaDynamicEntity.setImageProvider`. Every frame of a dynamic image whose longest side exceeds the cap, in pixels, is downscaled to it with its aspect ratio kept, for still and animated images alike. Without it, behaviour is unchanged.
+- Pause animated dynamic images while no `SvgaPlayer` is showing their entity, as Flutter's `Image` does for multi-frame images. A player under `TickerMode(enabled: false)`, such as a covered route or an offstage tab, or with `MediaQuery` disabling animations, no longer keeps the image stream decoding. The image keeps its current frame and resumes when both conditions clear.
 
 ## 0.1.4
 
