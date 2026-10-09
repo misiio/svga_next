@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -170,6 +171,50 @@ void main() {
     expect(bundle.requested, ['first', 'second', 'third']);
   });
 
+  group('maxImageDimension', () {
+    Future<ui.Image> decode(Uint8List image, {int? maxImageDimension}) async {
+      final movie = SvgaLoader.load(
+        SvgaSource.memory(svgaBytes(images: {'image': image})),
+        options: SvgaDecodeOptions(maxImageDimension: maxImageDimension),
+      );
+      loads.add(movie);
+      return (await movie).imageFor('image')!;
+    }
+
+    for (final format in ['gif', 'webp']) {
+      test('caps the first frame of a multi-frame $format', () async {
+        final image = await decode(_fixture('animated_400x300.$format'),
+            maxImageDimension: 40);
+
+        expect([image.width, image.height], [40, 30]);
+        expect(await _pixel(image, 20, 15), const ui.Color(0xffff0000));
+      });
+
+      test('leaves a multi-frame $format within the cap at full size',
+          () async {
+        final image = await decode(_fixture('animated_400x300.$format'),
+            maxImageDimension: 400);
+
+        expect([image.width, image.height], [400, 300]);
+      });
+    }
+
+    test('caps a single-frame image', () async {
+      final image = await decode(await _png(400, 300), maxImageDimension: 40);
+
+      expect([image.width, image.height], [40, 30]);
+      expect(await _pixel(image, 20, 15), const ui.Color(0xffffffff));
+    });
+
+    test('leaves images at full size without a cap', () async {
+      final png = await decode(await _png(400, 300));
+      final gif = await decode(_fixture('animated_400x300.gif'));
+
+      expect([png.width, png.height], [400, 300]);
+      expect([gif.width, gif.height], [400, 300]);
+    });
+  });
+
   test('the load limit rejects nonpositive values without changing the limit',
       () {
     for (final value in [0, -1]) {
@@ -217,11 +262,20 @@ class _GatedAssetBundle extends CachingAssetBundle {
   }
 }
 
-Future<Uint8List> _png() async {
+Uint8List _fixture(String name) =>
+    File('test/fixtures/$name').readAsBytesSync();
+
+Future<ui.Color> _pixel(ui.Image image, int x, int y) async {
+  final bytes = (await image.toByteData())!;
+  final rgba = bytes.getUint32((y * image.width + x) * 4);
+  return ui.Color((rgba & 0xff) << 24 | rgba >> 8);
+}
+
+Future<Uint8List> _png([int width = 1, int height = 1]) async {
   final recorder = ui.PictureRecorder();
   ui.Canvas(recorder).drawColor(const ui.Color(0xffffffff), ui.BlendMode.src);
   final picture = recorder.endRecording();
-  final image = await picture.toImage(1, 1);
+  final image = await picture.toImage(width, height);
   try {
     return (await image.toByteData(format: ui.ImageByteFormat.png))!
         .buffer

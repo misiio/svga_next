@@ -129,11 +129,35 @@ abstract final class SvgaLoader {
     final codec =
         await descriptor.instantiateCodec(targetWidth: tw, targetHeight: th);
     try {
-      final frame = await codec.getNextFrame();
-      return frame.image;
+      final image = (await codec.getNextFrame()).image;
+      // The engine ignores the target size for multi-frame images
+      // (flutter/flutter#137668), so their first frame arrives full size.
+      if (tw == null || math.max(image.width, image.height) <= maxDim!) {
+        return image;
+      }
+      return await _downscale(image, tw, th!);
     } finally {
       codec.dispose();
       descriptor.dispose();
+    }
+  }
+
+  /// Redraws [image] at [width]x[height] and disposes it.
+  static Future<ui.Image> _downscale(
+      ui.Image image, int width, int height) async {
+    final recorder = ui.PictureRecorder();
+    ui.Canvas(recorder).drawImageRect(
+      image,
+      ui.Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+      ui.Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+      ui.Paint()..filterQuality = ui.FilterQuality.medium,
+    );
+    final picture = recorder.endRecording();
+    try {
+      return await picture.toImage(width, height);
+    } finally {
+      picture.dispose();
+      image.dispose();
     }
   }
 }
