@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Fix `maxImageDimension` not capping multi-frame GIF and WebP embedded images. Their first frame is now downscaled like a single-frame image.
+
 ## 0.1.3
 
 - Add `animate` to `SvgaDynamicEntity.setImageProvider` to play animated GIF and WebP dynamic images. Frames advance only while an `SvgaPlayer` using the entity is mounted, and follow Flutter's image stream timing. Embedded images still show their first frame.
