@@ -4,7 +4,7 @@ An optional `just_audio` backend for `svga_next`.
 
 ## Requirements
 
-Flutter 3.27 and Dart 3.6 or later. Web is not supported.
+Flutter 3.41 and Dart 3.6 or later. Web is not supported.
 
 ## Install
 
