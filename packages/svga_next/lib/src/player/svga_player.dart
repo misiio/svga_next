@@ -101,13 +101,12 @@ class _SvgaPlayerState extends State<SvgaPlayer>
     _updateRegistration();
   }
 
-  /// Animated dynamic images only advance while a player is showing them:
-  /// mounted, with tickers enabled and animations not disabled, the rule
-  /// Flutter's `Image` uses to pause multi-frame images.
+  /// Registers the entity while the player is showing it, the rule Flutter's
+  /// `Image` uses to pause multi-frame images.
   ///
-  /// Reads both conditions here, not in `didChangeDependencies` alone:
-  /// `didUpdateWidget` runs first, and would register a swapped-in entity
-  /// with a player that is about to hide.
+  /// Also called from `didUpdateWidget`, which runs before
+  /// `didChangeDependencies` and would otherwise register a swapped-in
+  /// entity with a player that is about to hide.
   void _updateRegistration() {
     final showing =
         TickerMode.valuesOf(context).enabled && !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);

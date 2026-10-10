@@ -37,8 +37,7 @@ final class SvgaDynamicText {
   TextPainter? _painter;
   double _laidOutWidth = double.nan;
 
-  /// Laid out once per width and reused every frame (flutter_svga re-laid out
-  /// text on every paint).
+  /// Laid out once per width and reused every frame.
   TextPainter layoutFor(double width) {
     final p = _painter ??= TextPainter(
       text: span,
@@ -92,28 +91,21 @@ class SvgaDynamicEntity extends ChangeNotifier {
   }
 
   /// Resolves any `ImageProvider` (NetworkImage, CachedNetworkImageProvider,
-  /// ResizeImage…) and injects it. Completes with `false` on failure. Late
-  /// results for a key that has since been changed are discarded.
+  /// ResizeImage…) and injects it. Completes with `false` on failure, or when
+  /// a newer call for [key] replaces this one first.
   ///
-  /// With [animate], an animated GIF or WebP keeps playing: every frame
-  /// Flutter's image stream delivers replaces the previous one, with [fit],
-  /// [circle] and [cornerRadius] applied. Frames only advance while an
-  /// `SvgaPlayer` is showing this entity: mounted, with tickers enabled and
-  /// animations not disabled. Otherwise the image holds its current frame. The returned future still completes on the first frame.
+  /// With [animate], an animated GIF or WebP keeps playing, each frame with
+  /// [fit], [circle] and [cornerRadius] applied, and the future completes on
+  /// the first frame. Frames only advance while an `SvgaPlayer` is showing
+  /// this entity (mounted, tickers enabled, animations not disabled);
+  /// otherwise the image holds its current frame. Timing and looping follow
+  /// Flutter's `Image` widget. An error after the first frame keeps the last
+  /// good frame.
   ///
-  /// Timing and looping are Flutter's, as in the `Image` widget: frame delays
-  /// are not clamped, so frames with a zero delay advance every vsync. After
-  /// a pause the image continues from wherever Flutter's stream is, and
-  /// restarts from its first frame if `ImageCache` has evicted it. An error
-  /// after the first frame keeps the last good frame. A call replaced before
-  /// its first frame completes with `false`.
-  ///
-  /// With [maxImageDimension] (in pixels), every frame whose longest side
-  /// is larger is downscaled to it, keeping its aspect ratio, before it is
-  /// stored; smaller frames are stored as they are. It is the only bound on
-  /// animated frames, because the engine ignores target sizes for
-  /// multi-frame images (flutter/flutter#137668). Each call replaces the cap
-  /// of the previous one for [key].
+  /// With [maxImageDimension] (in pixels), frames whose longest side is
+  /// larger are downscaled to it, keeping their aspect ratio. It is the only
+  /// bound on animated frames: the engine ignores target sizes for
+  /// multi-frame images (flutter/flutter#137668).
   ///
   /// Tip: wrap avatars in `ResizeImage(provider, width: 128)` – decoding a
   /// 1080px avatar for a 60pt circle wastes texture memory.
@@ -203,7 +195,7 @@ class SvgaDynamicEntity extends ChangeNotifier {
         textDirection: textDirection,
       );
 
-  /// Rich text (e.g. nickname + coloured gift count, or emoji via WidgetSpan-free spans).
+  /// Rich text, e.g. a nickname followed by a coloured gift count.
   void setTextSpan(
     String key, {
     required InlineSpan span,

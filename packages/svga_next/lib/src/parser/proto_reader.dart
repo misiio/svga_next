@@ -3,12 +3,9 @@ import 'dart:typed_data';
 
 /// Minimal protobuf wire-format reader.
 ///
-/// `package:protobuf` generated classes materialise a full object tree (a
-/// GeneratedMessage + FieldSet for every frame of every sprite). For a
-/// 200-frame, 40-sprite gift that is tens of thousands of short-lived objects
-/// and the main source of GC pressure in flutter_svga. This reader streams
-/// fields directly into compact typed arrays, so there is no protobuf tree to
-/// purge in the first place.
+/// Streams fields straight into compact typed arrays instead of building a
+/// `package:protobuf` object tree, which for a 200-frame, 40-sprite gift is
+/// tens of thousands of short-lived objects.
 final class ProtoReader {
   ProtoReader(Uint8List buffer)
       : this._(buffer, ByteData.sublistView(buffer), 0, buffer.length);

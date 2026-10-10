@@ -99,7 +99,7 @@ final class PathData {
   static const int lineTo = 1; // x y
   static const int cubicTo = 2; // x1 y1 x2 y2 x y
   static const int quadTo = 3; // x1 y1 x y
-  static const int close = 4; //
+  static const int close = 4;
   static const int arcTo = 5; // x y rx ry rotationDeg largeArc(0/1) sweep(0/1)
 
   final int id;

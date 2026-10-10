@@ -89,7 +89,6 @@ abstract final class SvgaLoader {
               debugPrint('svga_next: failed to decode image "$key": $e');
             }
           }
-          // Purge immediately: drop the reference to the encoded bytes.
           data.images.remove(key);
         }
       }

@@ -41,7 +41,7 @@ class _GiftDemoState extends State<GiftDemo> {
       style: const TextStyle(
           color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600),
     );
-    // Custom drawer: combo counter painted into the "combo" layer.
+    // Combo counter painted by a custom drawer.
     _dynamic.setDrawer('banner', drawer: (canvas, bounds, frame, alpha) {
       final tp = TextPainter(
         text: TextSpan(

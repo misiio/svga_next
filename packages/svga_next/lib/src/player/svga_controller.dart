@@ -158,8 +158,6 @@ class SvgaController extends ChangeNotifier {
     _audio?.muted = v;
   }
 
-  // ---------------------------------------------------------------------------
-
   void _onTick(Duration elapsed) {
     final m = _movie;
     if (m == null) return;

@@ -107,10 +107,9 @@ class SvgaPainter extends CustomPainter {
     if (dynImage != null) {
       _drawDynamicImage(canvas, dynImage, layout, a8);
     } else {
-      // A matte sprite's bitmap is stored under either its own key (1.x ZIP,
-      // some 2.x exporters) or the key without `.matte` (other 2.x exporters).
-      // The exact key wins, so a separate `x.matte` bitmap is never replaced
-      // by the content bitmap `x`.
+      // A matte bitmap is stored under its own key (1.x ZIP, some 2.x
+      // exporters) or without `.matte` (other 2.x exporters). The exact key
+      // wins, so a separate `x.matte` bitmap is never shadowed by `x`.
       final img = movie.imageFor(key) ??
           (sprite.isMatte
               ? movie.imageFor(key.substring(0, key.length - 6))
