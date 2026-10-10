@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 - Require Flutter 3.41 or later, matching svga_next.
 

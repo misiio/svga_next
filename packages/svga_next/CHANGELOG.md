@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.5
 
 - Require Flutter 3.41 or later, for `TickerMode.valuesOf`.
 - Add `maxImageDimension` to `SvgaDynamicEntity.setImageProvider`. Every frame of a dynamic image whose longest side exceeds the cap, in pixels, is downscaled to it with its aspect ratio kept, for still and animated images alike. Without it, behaviour is unchanged.

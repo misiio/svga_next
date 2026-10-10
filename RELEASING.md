@@ -1,8 +1,8 @@
 # Release the packages
 
-The next release contains `svga_next 0.1.4`.
-`svga_next_audioplayers` remains at `0.1.1`, and `svga_next_just_audio`
-remains at `0.1.0`. Both backend constraints already allow the new core version.
+The next release contains `svga_next 0.1.5` and `svga_next_just_audio 0.1.1`.
+`svga_next_audioplayers` remains at `0.1.1`. Both backend constraints already
+allow the new core version.
 
 ## Validate the checkout
 
@@ -19,7 +19,8 @@ for package in svga_next svga_next_audioplayers svga_next_just_audio; do
 done
 ```
 
-Run `flutter pub publish --dry-run` in the `svga_next` directory.
+Run `flutter pub publish --dry-run` in the `svga_next` and
+`svga_next_just_audio` directories.
 Inspect the archive contents. Build output, local dependency overrides,
 and generated platform files must not
 appear in the archives.
@@ -28,11 +29,14 @@ Commit the release files before publishing to avoid the dirty checkout warning.
 
 ## Publish and validate hosted dependencies
 
-1. Run `flutter pub publish` from `packages/svga_next` to publish `svga_next 0.1.4`.
-2. Wait until `svga_next 0.1.4` is available on pub.dev.
-3. Validate both backends and the example against the hosted release as described below.
+1. Run `flutter pub publish` from `packages/svga_next` to publish `svga_next 0.1.5`.
+2. Run `flutter pub publish` from `packages/svga_next_just_audio` to publish
+   `svga_next_just_audio 0.1.1`.
+3. Wait until both releases are available on pub.dev.
+4. Validate both backends and the example against the hosted releases as described below.
 
-Publication requires pub.dev credentials. The backends do not need new releases.
+Publication requires pub.dev credentials. `svga_next_audioplayers` does not need
+a new release.
 
 To validate the packages without local overrides, export the committed
 release into a temporary directory. From the repository root, run:

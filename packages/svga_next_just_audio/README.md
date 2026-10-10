@@ -11,7 +11,7 @@ Flutter 3.41 and Dart 3.6 or later. Web is not supported.
 ```yaml
 dependencies:
   svga_next: ^0.1.0
-  svga_next_just_audio: ^0.1.0
+  svga_next_just_audio: ^0.1.1
 ```
 
 Run `flutter pub get`.

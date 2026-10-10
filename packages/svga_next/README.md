@@ -16,7 +16,7 @@ Add the package to your app's `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  svga_next: ^0.1.4
+  svga_next: ^0.1.5
 ```
 
 Then run `flutter pub get`.
